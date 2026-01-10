@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>lytonggggg 游戏小天地</title>
+<style>
+body{
+ margin:0;
+ font-family:Arial;
+ background:linear-gradient(135deg,#0d1b2a,#1b263b,#415a77);
+ color:#eaf4ff;
+ overflow-y:auto;
+}
+header{text-align:center;padding:50px 20px}
+h1{font-size:48px;color:#a0c4ff}
+p{color:#cddafd}
+section{
+ margin:60px auto;
+ width:90%;max-width:900px;
+ background:rgba(255,255,255,.08);
+ border-radius:20px;
+ padding:25px;
+}
+canvas{
+ display:block;
+ margin:auto;
+ border-radius:12px;
+ background:#eef4ff
+}
+h2{text-align:center;color:#90dbf4}
+button{
+ padding:10px 20px;
+ border:none;
+ border-radius:20px;
+ background:#4cc9f0;
+ color:#000;
+ font-size:16px;
+ cursor:pointer
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>lytonggggg 游戏小天地</h1>
+<p>by lytonggg彤🪼</p>
+</header>
+
+<section>
+<h2>⚫ 五子棋（第5子才赢）</h2>
+<canvas id="gomoku" width="450" height="450"></canvas>
+</section>
+
+<section>
+<h2>🐹 打地鼠</h2>
+<canvas id="whack" width="400" height="300"></canvas>
+</section>
+
+<section>
+<h2>🧱 Block Blast</h2>
+<canvas id="block" width="300" height="600"></canvas>
+</section>
+
+<section>
+<h2>✈️ 飞机射击</h2>
+<canvas id="plane" width="600" height="700"></canvas>
+</section>
+
+<script>
+/* ================= 五子棋 ================= */
+const g=document.getElementById("gomoku"),gc=g.getContext("2d");
+const S=15,B=[...Array(S)].map(()=>Array(S).fill(0));
+let turn=1;
+function drawG(){
+ gc.clearRect(0,0,450,450);
+ for(let i=0;i<S;i++){
+  gc.moveTo(i*30,0);gc.lineTo(i*30,450);
+  gc.moveTo(0,i*30);gc.lineTo(450,i*30);
+ }
+ gc.stroke();
+ for(let i=0;i<S;i++)for(let j=0;j<S;j++){
+  if(B[i][j]){
+   gc.beginPath();
+   gc.arc(j*30+15,i*30+15,12,0,7);
+   gc.fillStyle=B[i][j]==1?"black":"white";
+   gc.fill();
+  }
+ }
+}
+function win(x,y,c){
+ const d=[[1,0],[0,1],[1,1],[1,-1]];
+ return d.some(([dx,dy])=>{
+  let n=1;
+  for(let k=1;k<5;k++) if(B[x+k*dx]?.[y+k*dy]==c)n++; else break;
+  for(let k=1;k<5;k++) if(B[x-k*dx]?.[y-k*dy]==c)n++; else break;
+  return n>=5;
+ });
+}
+g.onclick=e=>{
+ let x=(e.offsetY/30)|0,y=(e.offsetX/30)|0;
+ if(B[x][y])return;
+ B[x][y]=turn;
+ if(win(x,y,turn)){
+  setTimeout(()=>alert("胜利！"),10);
+  B.forEach(r=>r.fill(0));
+ }
+ turn=3-turn;
+ drawG();
+};
+drawG();
+
+/* ================= 打地鼠 ================= */
+const w=document.getElementById("whack"),wx=w.getContext("2d");
+let mole=0;
+w.onclick=e=>{
+ if(Math.abs(e.offsetX-(mole*100+50))<30) mole=Math.random()*4|0;
+};
+setInterval(()=>{
+ wx.clearRect(0,0,400,300);
+ wx.fillStyle="brown";
+ wx.fillRect(mole*100+30,150,40,40);
+},500);
+
+/* ================= Block Blast ================= */
+const bl=document.getElementById("block"),bx=bl.getContext("2d");
+let grid=[...Array(20)].map(()=>Array(10).fill(0)),cur={x:4,y:0};
+document.onmousemove=e=>{
+ const r=bl.getBoundingClientRect();
+ if(e.clientX>r.left&&e.clientX<r.right) cur.x=Math.max(0,Math.min(9,((e.clientX-r.left)/30)|0));
+};
+setInterval(()=>{
+ if(cur.y<19&&!grid[cur.y+1][cur.x]) cur.y++;
+ else {grid[cur.y][cur.x]=1; cur={x:4,y:0};}
+ grid=grid.filter(r=>r.some(v=>!v));
+ while(grid.length<20) grid.unshift(Array(10).fill(0));
+ bx.clearRect(0,0,300,600);
+ grid.forEach((r,y)=>r.forEach((v,x)=>v&&bx.fillRect(x*30,y*30,28,28)));
+ bx.fillStyle="#90dbf4";
+ bx.fillRect(cur.x*30,cur.y*30,28,28);
+},300);
+
+/* ================= 飞机射击 ================= */
+const p=document.getElementById("plane"),pxc=p.getContext("2d");
+let pxp=300,bul=[],ene=[];
+p.onmousemove=e=>pxp=e.offsetX;
+setInterval(()=>ene.push({x:Math.random()*560,y:-40}),800);
+setInterval(()=>{
+ pxc.clearRect(0,0,600,700);
+ pxc.fillStyle="#4cc9f0";
+ pxc.fillRect(pxp-15,650,30,40);
+ bul.push({x:pxp,y:650});
+ bul=bul.map(b=>({x:b.x,y:b.y-12})).filter(b=>b.y>0);
+ pxc.fillStyle="yellow";
+ bul.forEach(b=>pxc.fillRect(b.x-2,b.y,4,10));
+ ene=ene.map(e=>({x:e.x,y:e.y+4})).filter(e=>e.y<720);
+ pxc.fillStyle="red";
+ ene.forEach(e=>pxc.fillRect(e.x,e.y,40,40));
+ ene=ene.filter(e=>!bul.some(b=>b.x>e.x&&b.x<e.x+40&&b.y>e.y&&b.y<e.y+40));
+},40);
+</script>
+
+</body>
+</html>
