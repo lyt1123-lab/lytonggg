@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merry Christmas 2026</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+ background:#030609;
+ color:white;
+ overflow:hidden;
+ font-family:monospace;
+}
+canvas{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+}
+#tree{z-index:1}
+#stars{z-index:0}
+h2{
+ position:absolute;
+ z-index:2;
+ top:5%;
+ width:100%;
+ text-align:center;
+ letter-spacing:5px;
+ color:#e8d9a0;
+ text-shadow:0 0 15px gold;
+ font-size:18px;
+}
+#code{
+ position:absolute;
+ bottom:0;
+ width:100%;
+ height:18%;
+ overflow:hidden;
+ color:#629b77;
+ background:linear-gradient(transparent,#030609);
+ font-size:11px;
+ line-height:18px;
+ white-space:pre;
+ z-index:3;
+ opacity:.8;
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<canvas id="tree"></canvas>
+<h2>MERRY CHRISTMAS 2026</h2>
+<div id="code"></div>
+
+<script>
+const starCanvas=document.getElementById("stars");
+const sc=starCanvas.getContext("2d");
+const canvas=document.getElementById("tree");
+const ctx=canvas.getContext("2d");
+
+let W,H,stars=[],lights=[],snow=[];
+const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+";
+const green=["#08733d","#15934e","#21a35c","#0d6038"];
+const colors=["#ffdb70","#ff5050","#65baff","#ffffff"];
+
+function resize(){
+ W=innerWidth;
+ H=innerHeight;
+ [canvas,starCanvas].forEach(c=>{
+  c.width=W*devicePixelRatio;
+  c.height=H*devicePixelRatio;
+  c.style.width=W+"px";
+  c.style.height=H+"px";
+  c.getContext("2d").setTransform(
+   devicePixelRatio,0,0,devicePixelRatio,0,0
+  );
+ });
+ stars=Array.from({length:180},()=>({
+  x:Math.random()*W,
+  y:Math.random()*H,
+  r:Math.random()*1.5,
+  p:Math.random()*6
+ }));
+ snow=Array.from({length:100},()=>({
+  x:Math.random()*W,
+  y:Math.random()*H,
+  v:Math.random()+.3
+ }));
+}
+addEventListener("resize",resize);
+resize();
+
+let time=0;
+
+function drawStars(){
+ time+=.02;
+ sc.clearRect(0,0,W,H);
+ for(const s of stars){
+  sc.globalAlpha=.3+.7*Math.abs(Math.sin(time+s.p));
+  sc.fillStyle="white";
+  sc.fillText("✦",s.x,s.y);
+ }
+ for(const s of snow){
+  s.y+=s.v;
+  if(s.y>H)s.y=-5;
+  sc.globalAlpha=.6;
+  sc.fillStyle="white";
+  sc.fillRect(s.x,s.y,2,2);
+ }
+ sc.globalAlpha=1;
+}
+
+function drawTree(){
+ ctx.clearRect(0,0,W,H);
+ const cx=W/2;
+ const top=H*.15;
+ const height=H*.62;
+ const width=Math.min(W*.75,height*.9);
+
+ // Star
+ ctx.font="32px serif";
+ ctx.textAlign="center";
+ ctx.shadowColor="gold";
+ ctx.shadowBlur=20;
+ ctx.fillStyle="#ffe58b";
+ ctx.fillText("★",cx,top);
+ ctx.shadowBlur=0;
+
+ // ASCII tree
+ const rows=43;
+ const rowGap=height/rows;
+
+ for(let row=0;row<rows;row++){
+  let ratio=row/rows;
+  let half=width*ratio/2;
+  let count=Math.floor(half*2/9);
+
+  for(let j=0;j<=count;j++){
+   let x=cx-half+j*9;
+   let y=top+25+row*rowGap;
+
+   let n=Math.sin(row*13+j*7);
+   let char=chars[Math.floor(
+    Math.abs(Math.sin(row*7+j*13+time))*chars.length
+   )];
+
+   ctx.font="bold 10px monospace";
+   ctx.fillStyle=green[Math.abs(Math.floor(n*10))%4];
+   ctx.globalAlpha=.7+.3*Math.sin(time*3+j);
+   ctx.fillText(char,x,y);
+  }
+ }
+ ctx.globalAlpha=1;
+
+ // Christmas lights
+ for(let i=0;i<35;i++){
+  let f=.15+(i%17)*.045;
+  let y=top+30+height*f;
+  let x=cx+Math.sin(i*12)*width*f*.4;
+
+  ctx.beginPath();
+  ctx.arc(x,y,2.5,0,Math.PI*2);
+  ctx.fillStyle=colors[i%4];
+  ctx.shadowColor=colors[i%4];
+  ctx.shadowBlur=12;
+  ctx.fill();
+  ctx.shadowBlur=0;
+ }
+
+ // Trunk
+ ctx.font="bold 20px monospace";
+ ctx.fillStyle="#95613d";
+ ctx.fillText("|||||",cx,top+height+35);
+
+ // Gifts
+ function gift(x,y,color){
+  ctx.fillStyle=color;
+  ctx.fillRect(x-17,y-20,34,25);
+  ctx.fillStyle="#f4d77a";
+  ctx.fillRect(x-3,y-20,6,25);
+  ctx.fillRect(x-17,y-12,34,5);
+  ctx.font="18px serif";
+  ctx.fillText("♧",x,y-22);
+ }
+ gift(cx-55,top+height+38,"#c8323e");
+ gift(cx+55,top+height+38,"#2459a7");
+}
+
+function animate(){
+ drawStars();
+ drawTree();
+ requestAnimationFrame(animate);
+}
+animate();
+
+document.getElementById("code").textContent=
+`import random
+import time
+
+COLORS = ["green", "red", "gold"]
+TREE_HEIGHT = 43
+
+def create_tree():
+    for row in range(TREE_HEIGHT):
+        print(generate_ascii(row))
+
+def animate_lights():
+    while True:
+        update_lights()
+        time.sleep(0.1)
+
+create_tree()
+animate_lights()`;
+</script>
+</body>
+</html>
